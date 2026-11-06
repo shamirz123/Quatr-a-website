@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+@custom-variant short (@media (orientation: landscape) and (max-height: 32rem));
+@custom-variant fine (@media (hover: hover) and (pointer: fine));
+
+@theme {
+  --color-chalk: #f3f3ef;
+  --color-grove: #1f3a2e;
+  --color-moss: #5d6f62;
+  --color-blossom: #f3b8c3;
+  --color-sun: #f4c02e;
+  --color-plum: #7a2e3a;
+  --color-frost: #b9d3e6;
+  --color-line: color-mix(in srgb, #1f3a2e 16%, transparent);
+
+  --font-sans: "Bricolage Grotesque Variable", "Helvetica Neue", Arial, sans-serif;
+
+  --text-mega: clamp(3.4rem, 10vw, 10rem);
+  --text-mega--line-height: 0.88;
+  --text-mega--letter-spacing: -0.045em;
+  --text-d1: clamp(2.6rem, 6.4vw, 6.5rem);
+  --text-d1--line-height: 0.95;
+  --text-d1--letter-spacing: -0.04em;
+  --text-d2: clamp(2rem, 4.2vw, 4.25rem);
+  --text-d2--line-height: 1.02;
+  --text-d2--letter-spacing: -0.03em;
+  --text-d3: clamp(1.5rem, 2.5vw, 2.4rem);
+  --text-d3--line-height: 1.12;
+  --text-d3--letter-spacing: -0.02em;
+
+  --spacing-gutter: max(1.25rem, 4vw, calc((100vw - 120rem) / 2));
+  --breakpoint-tab: 56.3125rem;
+
+  --ease-q: cubic-bezier(0.65, 0, 0.15, 1);
+
+  --animate-marquee: marquee 38s linear infinite;
+  --animate-rise: rise 0.9s var(--ease-q) both;
+  --animate-drip: drip 2.4s var(--ease-q) infinite;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(1.5rem);
+    }
+  }
+
+  @keyframes drip {
+    0% {
+      transform: scaleY(0);
+      transform-origin: top;
+    }
+    50% {
+      transform: scaleY(1);
+      transform-origin: top;
+    }
+    51% {
+      transform: scaleY(1);
+      transform-origin: bottom;
+    }
+    100% {
+      transform: scaleY(0);
+      transform-origin: bottom;
+    }
+  }
+
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+}
+
+@layer base {
+  html {
+    font-size: clamp(16px, calc(100vw / 90), 24px);
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-chalk font-sans text-grove antialiased;
+    font-optical-sizing: auto;
+    line-height: 1.55;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-weight: 650;
+    font-stretch: 82%;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  img {
+    user-select: none;
+  }
+
+  :focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background: var(--color-sun);
+    color: var(--color-grove);
+  }
+
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+
+  .lenis.lenis-stopped {
+    overflow: clip;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
