@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { usePathname } from "next/navigation";
 import TLink from "./TLink";
 import Logo from "./Logo";
+import Bottle from "./Bottle";
 import { usePageTransition } from "./Providers";
 import { perfumes } from "@/data/perfumes";
 
@@ -72,23 +73,7 @@ export default function Header() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <span className="hidden items-center gap-1.5 tab:flex" aria-hidden="true">
-              {perfumes.map((p) => (
-                <TLink
-                  key={p.slug}
-                  href={`/fragrance/${p.slug}`}
-                  text={p.name}
-                  color={p.color}
-                  ink={p.ink}
-                  tabIndex={-1}
-                  title={`${p.name}, ${p.season.toLowerCase()}`}
-                  className="block size-3 rounded-full ring-grove/30 transition-transform duration-300 hover:scale-150 hover:ring-1"
-                  style={{ backgroundColor: p.color }}
-                >
-                  <span className="sr-only">{p.name}</span>
-                </TLink>
-              ))}
-            </span>
+            <SeasonMenu pathname={pathname} />
             <button
               type="button"
               onClick={() => {
@@ -96,7 +81,7 @@ export default function Header() {
                 setBagOpen(true);
               }}
               aria-label={`Open bag, ${bag} ${bag === 1 ? "item" : "items"}`}
-              className="ml-3 flex h-10 items-center gap-2 rounded-full border border-line px-4 text-[0.95rem] font-medium transition-colors duration-300 hover:border-grove"
+              className="flex h-10 items-center gap-2 rounded-full border border-line px-4 text-[0.95rem] font-medium transition-colors duration-300 hover:border-grove"
             >
               Bag
               <span key={bag} className={`grid size-6 place-items-center rounded-full text-xs tabular-nums transition-colors ${bag ? "animate-rise bg-sun" : "bg-grove/8"}`}>
@@ -158,5 +143,100 @@ export default function Header() {
         </div>
       </div>
     </>
+  );
+}
+
+function SeasonMenu({ pathname }: { pathname: string }) {
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => setOpen(false), [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: PointerEvent) => {
+      if (!box.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const key = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      box.current?.querySelector<HTMLButtonElement>("button")?.focus();
+    };
+    document.addEventListener("pointerdown", away);
+    document.addEventListener("keydown", key);
+    return () => {
+      document.removeEventListener("pointerdown", away);
+      document.removeEventListener("keydown", key);
+    };
+  }, [open]);
+
+  const hover = (on: boolean) => (e: ReactPointerEvent) => {
+    if (e.pointerType !== "mouse") return;
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setOpen(on), on ? 60 : 220);
+  };
+
+  return (
+    <div ref={box} className="relative hidden tab:block" onPointerEnter={hover(true)} onPointerLeave={hover(false)}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-controls="season-menu"
+        className={`flex h-10 items-center gap-2.5 rounded-full border pr-3.5 pl-2.5 text-[0.95rem] font-medium transition-colors duration-300 ${
+          open ? "border-grove bg-grove text-chalk" : "border-line hover:border-grove"
+        }`}
+      >
+        <span aria-hidden="true" className="flex -space-x-1">
+          {perfumes.map((p) => (
+            <span key={p.slug} className={`size-3.5 rounded-full ring-2 transition-[box-shadow] ${open ? "ring-grove" : "ring-chalk"}`} style={{ backgroundColor: p.color }} />
+          ))}
+        </span>
+        Seasons
+        <svg aria-hidden="true" viewBox="0 0 12 12" className={`size-3 transition-transform duration-300 ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="1.6">
+          <path d="M2.5 4.5 6 8l3.5-3.5" />
+        </svg>
+      </button>
+
+      <div
+        id="season-menu"
+        inert={!open}
+        className={`absolute top-full right-0 w-[22rem] pt-2 transition-[opacity,translate,visibility] duration-300 ease-q ${
+          open ? "visible translate-y-0 opacity-100" : "invisible -translate-y-1.5 opacity-0"
+        }`}
+      >
+        <ul className="grid gap-1 rounded-[1.25rem] border border-line bg-chalk p-2 shadow-[0_1.25rem_2.5rem_-1rem_rgb(31_58_46/0.3)]">
+          {perfumes.map((p) => {
+            const here = pathname === `/fragrance/${p.slug}`;
+            return (
+              <li key={p.slug}>
+                <TLink
+                  href={`/fragrance/${p.slug}`}
+                  text={p.name}
+                  color={p.color}
+                  ink={p.ink}
+                  aria-current={here ? "page" : undefined}
+                  className={`group flex items-center gap-3 rounded-xl p-2 transition-colors duration-300 ${here ? "bg-grove/8" : "hover:bg-grove/5"}`}
+                >
+                  <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-lg" style={{ backgroundColor: p.color }}>
+                    <Bottle liquid={p.liquid} name={p.name} no={p.no} shadow={false} className="h-9 transition-transform duration-500 ease-q group-hover:-translate-y-0.5 group-hover:rotate-[-6deg]" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold [font-stretch:85%]">{p.name}</span>
+                    <span className="block text-sm text-moss">
+                      {p.season}, {p.months}
+                    </span>
+                  </span>
+                  <svg aria-hidden="true" viewBox="0 0 16 16" className="size-4 shrink-0 -translate-x-1 opacity-0 transition-[opacity,translate] duration-300 group-hover:translate-x-0 group-hover:opacity-100" fill="none" stroke="currentColor" strokeWidth="1.6">
+                    <path d="M2 8h12M9 3l5 5-5 5" />
+                  </svg>
+                </TLink>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </div>
   );
 }
